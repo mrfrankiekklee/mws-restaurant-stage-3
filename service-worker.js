@@ -7,7 +7,7 @@ var cacheFiles = [
     './js/main.js',
     './js/dbhelper.js',
     './js/app.js',
-    './css/style.css'
+    './dist/css/style.css'
     , 'https://maps.googleapis.com/maps/api/js?libraries=places&callback=initMap'
 ]
 

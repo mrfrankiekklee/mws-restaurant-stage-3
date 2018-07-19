@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
     <link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css" />
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="dist/css/styles.css">
+    <link rel="manifest" href="manifest.json">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#317EFB" />
     <title>Restaurant Reviews</title>
 </head>
 
@@ -22,10 +24,10 @@
         <section>
             <div class="filter-options">
                 <h2>Filter Results</h2>
-                <select id="neighborhoods-select" name="neighborhoods" onchange="updateRestaurants()">
+                <select id="neighborhoods-select" name="neighborhoods" aria-label="select-neighborhoods" onchange="updateRestaurants()">
           <option value="all">All Neighborhoods</option>
         </select>
-                <select id="cuisines-select" name="cuisines" onchange="updateRestaurants()">
+                <select id="cuisines-select" name="cuisines" aria-label="select-cuisines" onchange="updateRestaurants()">
           <option value="all">All Cuisines</option>
         </select>
             </div>
@@ -36,6 +38,7 @@
     <script type="application/javascript" charset="utf-8" src="js/dbhelper.js"></script>
     <script type="application/javascript" charset="utf-8" src="js/main.js"></script>
     <script src="js/app.js"></script>
+
 
 
 

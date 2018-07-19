@@ -1,3 +1,4 @@
+import DBHelper from './dbhelper.js';
 let restaurant;
 var map;
 
@@ -60,47 +61,37 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
     const image = document.getElementById('restaurant-img');
     image.className = 'restaurant-img'
     image.src = DBHelper.imageUrlForRestaurant(restaurant);
-    if(DBHelper.imageUrlForRestaurant(restaurant)=="/img/1.jpg"){
-    image.alt ="Mission Chinese Food Restaurant, classical indoor decoration"
-}   else if(DBHelper.imageUrlForRestaurant(restaurant)=="/img/2.jpg"){
-    image.alt ="Emily Restaurant, Italian pizza"
-}
-    else if(DBHelper.imageUrlForRestaurant(restaurant)=="/img/3.jpg"){
-    image.alt ="Kang Ho Dong Baekjeong Restaurant, street food style decoration"
+    if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/1.jpg") {
+        image.alt = "Mission Chinese Food Restaurant, classical indoor decoration"
+    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/2.jpg") {
+        image.alt = "Emily Restaurant, Italian pizza"
+    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/3.jpg") {
+        image.alt = "Kang Ho Dong Baekjeong Restaurant, street food style decoration"
 
-}
-    else if(DBHelper.imageUrlForRestaurant(restaurant)=="/img/4.jpg"){
-            image.alt ="Katz's Delicatessen Restaurant, American fast food"
+    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/4.jpg") {
+        image.alt = "Katz's Delicatessen Restaurant, American fast food"
 
-    }
-    else if(DBHelper.imageUrlForRestaurant(restaurant)=="/img/5.jpg"){
-            image.alt ="Roberta's Pizza Restaurant, classical Pizza decoration"
+    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/5.jpg") {
+        image.alt = "Roberta's Pizza Restaurant, classical Pizza decoration"
 
-    }
-    else if(DBHelper.imageUrlForRestaurant(restaurant)=="/img/6.jpg"){
-            image.alt ="Hometown BBQ Restaurant, casual decoration"
+    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/6.jpg") {
+        image.alt = "Hometown BBQ Restaurant, casual decoration"
 
-    }
-    else if(DBHelper.imageUrlForRestaurant(restaurant)=="/img/7.jpg"){
-            image.alt ="Superiority Burger Restaurant, fast food style decoration"
+    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/7.jpg") {
+        image.alt = "Superiority Burger Restaurant, fast food style decoration"
 
-    }
-    else if(DBHelper.imageUrlForRestaurant(restaurant)=="/img/8.jpg"){
-            image.alt ="The Dutch Restaurant, classical indoor decoration"
+    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/8.jpg") {
+        image.alt = "The Dutch Restaurant, classical indoor decoration"
 
-    }
+    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/9.jpg") {
+        image.alt = "Mu Ramen Restaurant, well-designed decoration"
 
-    else if(DBHelper.imageUrlForRestaurant(restaurant)=="/img/9.jpg"){
-            image.alt ="Mu Ramen Restaurant, well-designed decoration"
+    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/10.jpg") {
+        image.alt = "Casa Enrique Restaurant, modern indoor decoration"
 
     }
 
-    else if(DBHelper.imageUrlForRestaurant(restaurant)=="/img/10.jpg"){
-            image.alt ="Casa Enrique Restaurant, modern indoor decoration"
-
-    }
-
-    image.tabIndex='0';
+    image.tabIndex = '0';
 
     const cuisine = document.getElementById('restaurant-cuisine');
     cuisine.innerHTML = restaurant.cuisine_type;
