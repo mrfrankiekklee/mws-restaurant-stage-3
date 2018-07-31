@@ -45,7 +45,7 @@ self.addEventListener('fetch', function (e) {
     console.log("[ServiceWorker] Fetching", e.request.url);
 
 
-    var url = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDzLHy2m5sSKhSx_-yot8xk8jXTP-T8q18&libraries=places&callback=initMap'
+    var url = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyBdJV2tuoBNRzvmw4s9Xr9yogc0QbDktm0&libraries=places&callback=initMap'
 
     e.respondWith(
 
@@ -54,13 +54,10 @@ self.addEventListener('fetch', function (e) {
                 console.log("[ServiceWorker] Found in cache", e.request.url);
                 return response;
             }
+            if (e.request.cache === 'only-if-cached' && e.request.mode !== 'same-origin') {
+                return;
+            }
             return fetch(e.request);
-            /*  caches.open('OpaqueCache').then(function (cache) {
-                  fetch(url, {
-                      mode: 'no-cors'
-                  })
 
-
-              })*/
         }));
 });

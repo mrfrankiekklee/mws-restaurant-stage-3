@@ -13,6 +13,10 @@ class DBHelper {
         return `http://localhost:${port}/restaurants`;
     }
 
+    static get SERVER_URL() {
+        const port = 1337 // Change this to your server port
+        return `http://localhost:${port}/`;
+    }
     /**
      * Fetch all restaurants.
      */
@@ -23,8 +27,15 @@ class DBHelper {
 
         request.onupgradeneeded = function (event) {
             db = event.target.result;
-            var createObjStore = db.createObjectStore('restaurant_name', {
+            var createObjStore = db.createObjectStore('Restaurants', {
                 keyPath: "id"
+            });
+            var createObjStoreReview = db.createObjectStore('Reviews', {
+                keyPath: "id"
+            });
+            var ObjStoreOfflineReview = db.createObjectStore('offReviews', {
+                keyPath: "key",
+                autoIncrement: true
             });
 
             myJson.forEach(function (restaurant) {
@@ -51,35 +62,44 @@ class DBHelper {
         var allData;
         request.onsuccess = function (event) {
             db = event.target.result;
-            var tx = db.transaction('restaurant_name', 'readwrite');
-            var store = tx.objectStore('restaurant_name');
+            var tx = db.transaction('Restaurants', 'readwrite');
+            var store = tx.objectStore('Restaurants');
             store.getAll().onsuccess = function (event) {
                 var allData = event.target.result;
-                // console.log("All data is : " + jsonData)
                 callback(allData);
-
             }
 
         }
         return allData;
+    }
 
+    static getCachedReviews(callback) {
+        var db;
+        var request = window.indexedDB.open('restaurant', 1);
+        var allData;
+        request.onsuccess = function (event) {
+            db = event.target.result;
+            var tx = db.transaction('Reviews', 'readwrite');
+            var store = tx.objectStore('Reviews');
+            store.getAll().onsuccess = function (event) {
+                var allData = event.target.result;
+                callback(allData);
+            }
+
+        }
+        return allData;
     }
 
 
     static fetchRestaurants(callback) {
         var idb;
-
-
         fetch(DBHelper.DATABASE_URL)
             .then(function (response) {
                 return response.json();
             })
             .then(function (myJson) {
-
                 if (myJson.length > 0) {
-
                     idb = DBHelper.openDBData(myJson);
-                    console.log("JSON look like this:   " + myJson);
 
                 }
 
@@ -92,17 +112,185 @@ class DBHelper {
                 console.log(`Request failed. Use cached data instead`)
 
                 DBHelper.getCachedData(function (data) {
+                    return callback(null, data);
+                });
 
-                    console.log("returned data is " + data)
+                return callback(e, null);
+            });
 
+    }
+    // Same as fetch restaurants 
+    static fetchRestaurantsReviews(restaurant, callback) {
+
+        fetch(`http://localhost:1337/reviews/?restaurant_id=${restaurant.id}`)
+            .then(function (response) {
+                return response.json();
+            })
+            .then(function (myJson) {
+                console.log(myJson)
+                var db;
+                var request = window.indexedDB.open('restaurant', 1);
+                request.onsuccess = function (event) {
+                    db = event.target.result;
+                    var tx = db.transaction('Reviews', 'readwrite');
+                    var store = tx.objectStore('Reviews');
+                    myJson.forEach(function (review) {
+                        store.add(review);
+                    });
+
+                }
+                return callback(null, myJson);
+            })
+            .catch(function (e) {
+                console.log(`Request failed. Use cached data instead`)
+
+                DBHelper.getCachedReviews(function (data) {
 
                     return callback(null, data);
 
 
                 });
-
                 return callback(e, null);
+
+
+
+            })
+    }
+    static submitReview(data) {
+        console.log(data)
+        let offReview_obj = {
+            name: 'addReview',
+            data: data,
+            object_type: 'review'
+        };
+
+        if (!navigator.onLine && (offReview_obj.name === 'addReview')) {
+            console.log("entered !navigator.onLine")
+
+            DBHelper.submitOfflineReview(offReview_obj);
+            return offReview_obj;
+        } else {
+
+            return fetch(DBHelper.SERVER_URL + "reviews", {
+                body: JSON.stringify(data),
+                cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+                credentials: 'same-origin', // include, same-origin, *omit
+                headers: {
+                    'content-type': 'application/json'
+                },
+                method: 'POST',
+                mode: 'cors', // no-cors, cors, *same-origin
+                redirect: 'follow', // *manual, follow, error
+                referrer: 'no-referrer', // *client, no-referrer
+            }).then(function (response) {
+                response.json()
+                    .then(function (myJson) {
+                        console.log("JSON is here:::" + myJson)
+                        var db;
+                        var request = window.indexedDB.open('restaurant', 1);
+                        request.onsuccess = function (event) {
+                            db = event.target.result;
+                            var tx = db.transaction('Reviews', 'readwrite');
+                            var store = tx.objectStore('Reviews');
+                            store.add(myJson);
+
+                        }
+                        request.onerror = function (event) {
+                            console.error(event.target.errorCode)
+                        }
+
+                        return myJson;
+                    }).catch(function (e) {
+                        console.error(e)
+
+                    });
+            }).catch(function (e) {
+
+                console.error(e)
+                DBHelper.submitOfflineReview(offReview_obj);
+
+
+
             });
+        }
+    }
+
+    static submitOfflineReview(offReview) {
+        var db;
+        var request = window.indexedDB.open('restaurant', 1);
+        var allData;
+        request.onsuccess = function (event) {
+            db = event.target.result;
+            var tx = db.transaction('offReviews', 'readwrite');
+            var store = tx.objectStore('offReviews');
+            store.add(offReview);
+
+        }
+        request.onerror = function (event) {
+            console.error(event.target.errorCode)
+        }
+
+        window.addEventListener('online', function (event) {
+            console.log("Browser online again!")
+            var request = window.indexedDB.open('restaurant', 1);
+
+            request.onsuccess = function (event) {
+                console.log("entered offreview Objectstore")
+                db = event.target.result;
+                var tx = db.transaction('offReviews', 'readwrite');
+                var store = tx.objectStore('offReviews');
+                store.getAll().onsuccess = function (event) {
+                    var offlineReviews = event.target.result;
+                    offlineReviews.forEach(function (review) {
+                        DBHelper.submitReview(review.data);
+                    });
+
+                    DBHelper.clearOffReview();
+                }
+
+            }
+
+        })
+
+    }
+
+
+
+    static clearOffReview() {
+        var db;
+        var request = window.indexedDB.open('restaurant', 1);
+        request.onsuccess = function (event) {
+            db = event.target.result;
+            var tx = db.transaction('offReviews', 'readwrite');
+            var store = tx.objectStore('offReviews').clear();
+        }
+    }
+
+    static checkFavorite(restaurantID, isFavorite) {
+
+        fetch(`${DBHelper.SERVER_URL}restaurants/${restaurantID}/?is_favorite=${isFavorite}`, {
+            method: 'PUT'
+        }).then(function (response) {
+            return response.json
+        }).then(function (myJson) {
+            var db;
+            var request = window.indexedDB.open('restaurant', 1);
+            request.onsuccess = function (event) {
+                db = event.target.result;
+                var tx = db.transaction('Restaurants', 'readwrite');
+                var store = tx.objectStore('Restaurants');
+                store.get(restaurantID).onsuccess = function (event) {
+                    var restaurant = event.target.result;
+                    restaurant.is_favorite = isFavorite;
+                    store.put(restaurant);
+
+                };
+
+
+            };
+            return myJson;
+        });
+
 
     }
 
@@ -225,7 +413,7 @@ class DBHelper {
      * Restaurant image URL.
      */
     static imageUrlForRestaurant(restaurant) {
-        return (`./img/${restaurant.id}` + ".jpg");
+        return (`./img/${restaurant.id}` + ".webp");
     }
 
     /**

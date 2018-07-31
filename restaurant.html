@@ -2,14 +2,368 @@
 <html lang="en">
 
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#317EFB" />
+    <link rel="manifest" href="manifest.json">
     <!-- Normalize.css for better cross-browser consistency -->
     <link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css" />
     <!-- Main CSS file -->
-    <link rel="stylesheet" href="dist/css/styles.css" type="text/css">
-    <link rel="manifest" href="manifest.json">
+    <style>
+        body,
+        td,
+        th,
+        p {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10pt;
+            color: #333;
+            line-height: 1.5
+        }
 
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#317EFB" />
+        body {
+            background-color: #fdfdfd;
+            margin: 0;
+            position: relative
+        }
+
+        html,
+        body {
+            overflow-x: hidden
+        }
+
+        ul,
+        li {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10pt;
+            color: #333
+        }
+
+        a {
+            color: orange;
+            text-decoration: none
+        }
+
+        a:hover,
+        a:focus {
+            color: #3397db;
+            text-decoration: none
+        }
+
+        a img {
+            border: none 0px #fff
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0 20px
+        }
+
+        h2 {
+            font-size: 23px;
+            margin-left: -3px
+        }
+
+        article,
+        aside,
+        canvas,
+        details,
+        figcaption,
+        figure,
+        footer,
+        header,
+        hgroup,
+        menu,
+        nav,
+        section {
+            display: block
+        }
+
+        #maincontent {
+            background-color: #f3f3f3;
+            min-height: 100%
+        }
+
+        #footer {
+            background-color: #444;
+            color: #FFF;
+            font-size: 20px;
+            letter-spacing: 1px;
+            padding: 25px;
+            text-align: center;
+            text-transform: uppercase
+        }
+
+        nav {
+            width: 100%;
+            height: 60px;
+            background-color: #252831;
+            -webkit-box-align: center;
+            -ms-flex-align: center;
+            align-items: center;
+            display: -webkit-box;
+            display: -ms-flexbox;
+            display: flex
+        }
+
+        nav h1 {
+            margin: auto;
+            text-align: center
+        }
+
+        nav h1 a {
+            color: #fff;
+            font-size: 14pt;
+            font-weight: 200;
+            letter-spacing: 10px;
+            text-transform: uppercase
+        }
+
+        #map {
+            height: 400px;
+            width: 100%;
+            background-color: #ccc
+        }
+
+        /* ====================== Restaurant Details ====================== */
+
+        .inside header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .inside #map-container {
+            background: blue none repeat scroll 0 0;
+            height: 80%;
+            position: fixed;
+            right: 0;
+            top: 120px;
+            width: 50%;
+        }
+
+        .inside #map {
+            background-color: #ccc;
+            height: 100%;
+            width: 100%;
+        }
+
+        .inside #footer {
+            bottom: 0;
+        }
+
+        #restaurant-name {
+            color: #f18200;
+            font-family: Arial, sans-serif;
+            font-size: 20pt;
+            font-weight: 200;
+            letter-spacing: 0;
+            margin: 15px 0 30px;
+            text-transform: uppercase;
+            line-height: 1.1;
+        }
+
+        #restaurant-img {
+            width: 85%;
+            margin-top: 10px;
+        }
+
+        #restaurant-address {
+            font-size: 12pt;
+            margin: 10px 0px;
+        }
+
+        #restaurant-cuisine {
+            background-color: #333;
+            color: #ddd;
+            font-size: 12pt;
+            font-weight: 300;
+            letter-spacing: 10px;
+            margin: 0 0 20px;
+            padding: 2px 0;
+            text-align: center;
+            text-transform: uppercase;
+            width: 85%;
+        }
+
+        #restaurant-container {
+            border-bottom: 1px solid #d9d9d9;
+            border-top: 1px solid #fff;
+            padding: 30px 40px 30px;
+            width: 50%;
+            margin-top: 100px;
+        }
+
+        #reviews-container {
+            border-bottom: 1px solid #d9d9d9;
+            border-top: 1px solid #fff;
+            padding: 30px 40px 30px;
+            width: 50%;
+
+
+        }
+
+        #reviews-container {
+            padding: 30px 40px 30px;
+            margin-left: -20px;
+        }
+
+        #reviews-container h2 {
+            color: #f58500;
+            font-size: 24pt;
+            font-weight: 300;
+            letter-spacing: -1px;
+            padding-bottom: 1pt;
+        }
+
+        #reviews-list {
+            margin: 0;
+            padding: 0;
+        }
+
+        #reviews-list li {
+            background-color: #fff;
+            border: 2px solid #f3f3f3;
+            display: block;
+            list-style-type: none;
+            margin: 0 30px;
+            overflow: hidden;
+            padding: 20px 20px 20px;
+            width: 70%;
+        }
+
+        #reviews-list li p {
+            margin: 0 0 10px;
+        }
+
+        #restaurant-hours td {
+            color: #666;
+        }
+
+
+        #breadcrumb {
+            padding: 20px 40px 16px;
+            list-style: none;
+            background-color: #eee;
+            font-size: 17px;
+            margin: 0;
+            width: calc(50% - 80px);
+            text-align: left;
+            width: 100%;
+        }
+
+        /* Display list items side by side */
+
+        #breadcrumb li {
+            display: inline;
+        }
+
+        /* Add a slash symbol (/) before/behind each list item */
+
+        #breadcrumb li+li:before {
+            padding: 8px;
+            color: black;
+            content: "/\00a0";
+        }
+
+        /* Add a color to all links inside the list */
+
+        #breadcrumb li a {
+            color: #1400ff;
+            text-decoration: none;
+        }
+
+        /* Add a color on mouse-over */
+
+        #breadcrumb li a:hover {
+            color: #01447e;
+            text-decoration: underline;
+        }
+
+        .static_map_Res {
+            height: 100%;
+            width: 100%;
+
+
+        }
+
+        @media screen and (max-width: 737px) and (min-width:451px) {
+            .inside #map-container {
+                width: 100%;
+                order: -1;
+            }
+            #breadcrumb {
+                width: 100%;
+                order: -2;
+            }
+            .inside #map-container {
+                height: 35%;
+            }
+            #restaurant-container {
+
+                width: 100%;
+                margin-top: 400px;
+
+
+
+            }
+            #reviews-container {
+                width: 100%;
+
+
+            }
+
+
+        }
+
+
+
+
+        @media screen and (max-width: 450px) {
+
+            .filter-options select {
+                width: 90%;
+            }
+            .inside #map-container {
+                width: 100%;
+                order: -1;
+            }
+
+
+            #breadcrumb {
+                width: 100%;
+                order: -2;
+            }
+            .inside #map-container {
+                height: 35%;
+            }
+            #restaurant-container {
+
+                width: 100%;
+                margin-top: 300px;
+                margin-left: -5%;
+
+
+
+            }
+            #reviews-container {
+                width: 100%;
+                margin-left: -10%;
+
+
+            }
+        }
+
+    </style>
+
+
+
+
     <title>Restaurant Info</title>
 </head>
 
@@ -34,12 +388,13 @@
     <!-- Beginning main -->
     <main id="maincontent">
         <!-- Beginning map -->
-        <section id="map-container">
+        <section id="map-container" alt="map">
             <div id="map" role="application" aria-label="location" class="targetMap"></div>
+            <img tabindex="0" role="application" aria-label="Google map, click to active interactive map" class="static_map_Res" />
         </section>
         <!-- End map -->
         <!-- Beginning restaurant -->
-        <section id="restaurant-container">
+        <section id="restaurant-container" alt="restaurant details">
             <h2 id="restaurant-name"></h2>
             <img id="restaurant-img">
             <p id="restaurant-cuisine"></p>
@@ -50,6 +405,30 @@
         <!-- Beginning reviews -->
         <section id="reviews-container">
             <ul id="reviews-list"></ul>
+            <form id="reviewForm">
+                <p>
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name" placeholder="Your Name" required/>
+                </p>
+                <p>&nbsp;</p>
+                <p>
+                    <label for="rating">Rating</label>
+                    <select name="rating" alt="select box for rating" aria-label="selection box">
+						<option value="1">1</option>
+						<option value="2">2</option>
+						<option value="3" selected>3</option>
+						<option value="4">4</option>
+						<option value="5">5</option>
+					</select>
+                </p>
+                <p>
+                    <!-- <label for="reviewText">Review text:</label> -->
+                    <textarea rows="4" name="comments" alt="text area for comment" aria-label="textarea" placeholder="Write your review here" required></textarea>
+                </p>
+                <p>
+                    <input type="submit" value="Submit Review">
+                </p>
+            </form>
         </section>
         <!-- End reviews -->
     </main>
@@ -63,12 +442,12 @@
 
     <!-- Beginning scripts -->
     <!-- Database helpers -->
-    <script type="text/javascript" src="js/dbhelper.js"></script>
+    <script type="text/javascript" src="js/dbhelper.js" async defer></script>
     <!-- Main javascript file -->
-    <script type="text/javascript" src="js/restaurant_info.js"></script>
-    <script src="js/app.js"></script>
+    <script async defer type="text/javascript" src="js/restaurant_info.js"></script>
+    <script type="text/javascript" src="js/app.js" async defer></script>
     <!-- Google Maps -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDzLHy2m5sSKhSx_-yot8xk8jXTP-T8q18&libraries=places&callback=initMap"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBdJV2tuoBNRzvmw4s9Xr9yogc0QbDktm0&libraries=places&callback=initMap" async defer></script>
     <!-- End scripts -->
 
 </body>

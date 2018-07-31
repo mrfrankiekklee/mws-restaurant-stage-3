@@ -1,20 +1,46 @@
-//import DBHelper from './dbhelper.js';
-
-
 let restaurants,
     neighborhoods,
-    cuisines
-var map
-var markers = []
+    cuisines;
+var map;
+var markers = [];
+let isMobileMap = false,
+    isDesktopMap = false;
 
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
+
 document.addEventListener('DOMContentLoaded', (event) => {
     fetchNeighborhoods();
     fetchCuisines();
+    fillRestaurantsHTML();
 });
 
+
+observeImages = () => {
+    const images = document.querySelectorAll('.restaurant-img');
+    const options = {
+        threshold: 0.1
+    };
+    if ('IntersectionObserver' in window) {
+        var observer = new IntersectionObserver(onChange, options);
+        images.forEach(img => observer.observe(img));
+    } else {
+        images.forEach(image => loadImage(image));
+    }
+    const loadImage = image => {
+        image.src = image.dataset.src;
+    }
+
+    function onChange(entries, observer) {
+        entries.forEach(entry => {
+            if (entry.intersectionRatio > 0) {
+                loadImage(entry.target);
+                observer.unobserve(entry.target);
+            }
+        });
+    }
+}
 /**
  * Fetch all neighborhoods and set their HTML.
  */
@@ -74,18 +100,67 @@ fillCuisinesHTML = (cuisines = self.cuisines) => {
  * Initialize Google map, called from HTML.
  */
 window.initMap = () => {
+
+    if (window.innerWidth < 464) {
+        console.log('Its mobile!!!!!');
+        var deskMap = document.getElementById('map');
+        deskMap.style.display = 'none';
+        self.isDesktopMap = false;
+        self.initMobileMap();
+
+    } else {
+        console.log('Its desktop!!!!!');
+        var mobMap = document.querySelector('.static_map');
+        mobMap.style.display = 'none';
+        self.isMobileMap = false;
+        self.initDesktopMap();
+    }
+
+}
+
+window.initMobileMap = () => {
+    var mobMap = document.querySelector('.static_map');
+    mobMap.style.display = 'block';
+    self.isMobileMap = true;
+    self.isDesktopMap = false;
+    var mapMarkers = addMarkersToStatic(true);
+    console.log("first time is true")
+    mobMap.setAttribute('src', `https://maps.googleapis.com/maps/api/staticmap?center=40.722216,-73.987501&markers=size:large|color:red|${mapMarkers}&zoom=12&size=458x300&maptype=roadmap&key=AIzaSyAYs8hR5MJ-84q_MQTJYVgGYXBF8I5yrMw`);
+    updateRestaurants();
+
+    mobMap.addEventListener('click', function (e) {
+        e.preventDefault();
+        mobMap.style.display = 'none';
+        self.initDesktopMap();
+
+    });
+
+}
+
+window.initDesktopMap = () => {
+    var deskMap = document.getElementById('map');
+    deskMap.style.display = 'block';
+    self.isMobileMap = false;
+    self.isDesktopMap = true;
     let loc = {
         lat: 40.722216,
         lng: -73.987501
     };
-    self.map = new google.maps.Map(document.getElementById('map'), {
+
+
+    self.map = new google.maps.Map(deskMap, {
         zoom: 12,
         center: loc,
         scrollwheel: false
     });
+    self.isDesktopMap = true;
+    google.maps.event.addListenerOnce(map, 'idle', () => {
+        document.getElementsByTagName('iframe')[0].title = "Google Maps";
+    })
     updateRestaurants();
-}
 
+
+}
 /**
  * Update page and map for current restaurants.
  */
@@ -132,7 +207,15 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
     restaurants.forEach(restaurant => {
         ul.append(createRestaurantHTML(restaurant));
     });
-    addMarkersToMap();
+    if (window.innerWidth < 450 && self.isMobileMap === true) {
+        addMarkersToStatic(false);
+    }
+    if (self.map) {
+        addMarkersToMap();
+    }
+
+    observeImages();
+
 }
 
 /**
@@ -140,65 +223,62 @@ fillRestaurantsHTML = (restaurants = self.restaurants) => {
  */
 createRestaurantHTML = (restaurant) => {
     const li = document.createElement('li');
+    const image = `<img class="restaurant-img" alt="${restaurant.name} restaurant" data-src="img/${restaurant.id||'10'}.webp">`;
+    li.innerHTML = image;
 
-    const image = document.createElement('img');
-    image.className = 'restaurant-img';
-    image.tabIndex = '0';
-    image.role = 'img';
-    image.src = DBHelper.imageUrlForRestaurant(restaurant);
-    if (DBHelper.imageUrlForRestaurant(restaurant) == "./img/1.jpg") {
-        image.alt = "Mission Chinese Food Restaurant, classical indoor decoration"
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "./img/2.jpg") {
-        image.alt = "Emily Restaurant, Italian pizza"
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "./img/3.jpg") {
-        image.alt = "Kang Ho Dong Baekjeong Restaurant, street food style decoration"
+    const name = renderHtml('h2', restaurant.name, li);
+    const favorite = renderHtml('button', '❤', li);
+    favorite.classList.add("fav_btn");
+    favorite.onclick = function () {
+        const isFavoriteNow = !restaurant.is_favorite;
+        DBHelper.checkFavorite(restaurant.id, isFavoriteNow);
+        restaurant.is_favorite = isFavoriteNow;
+        changeFavElementClass(favorite, restaurant.is_favorite)
+    };
 
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "./img/4.jpg") {
-        image.alt = "Katz's Delicatessen Restaurant, American fast food"
+    changeFavElementClass(favorite, restaurant.is_favorite)
+    const neighborhood = renderHtml('p', restaurant.neighborhood, li);
+    const address = renderHtml('p', restaurant.address, li);
+    const more = renderHtml('a', 'View Details');
 
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "./img/5.jpg") {
-        image.alt = "Roberta's Pizza Restaurant, classical Pizza decoration"
-
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "./img/6.jpg") {
-        image.alt = "Hometown BBQ Restaurant, casual decoration"
-
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "./img/7.jpg") {
-        image.alt = "Superiority Burger Restaurant, fast food style decoration"
-
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "./img/8.jpg") {
-        image.alt = "The Dutch Restaurant, classical indoor decoration"
-
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "./img/9.jpg") {
-        image.alt = "Mu Ramen Restaurant, well-designed decoration"
-
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "./img/10.jpg") {
-        image.alt = "Casa Enrique Restaurant, modern indoor decoration"
-
-    }
-    li.append(image);
-
-    const name = document.createElement('h2');
-    name.innerHTML = restaurant.name;
-    name.tabIndex = '0';
-    li.append(name);
-
-    const neighborhood = document.createElement('p');
-    neighborhood.innerHTML = restaurant.neighborhood;
-    li.append(neighborhood);
-
-    const address = document.createElement('p');
-    address.innerHTML = restaurant.address;
-    li.append(address);
-
-    const more = document.createElement('a');
-    more.innerHTML = 'View Details';
     more.href = DBHelper.urlForRestaurant(restaurant);
     li.append(more)
-
     return li
 }
 
 
+changeFavElementClass = (el, fav) => {
+    if (!fav) {
+        el.classList.remove('favorite_yes');
+        el.classList.add('favorite_no');
+        el.setAttribute('aria-label', 'mark as favorite');
+
+    } else {
+        el.classList.remove('favorite_no');
+        el.classList.add('favorite_yes');
+        el.setAttribute('aria-label', 'remove as favorite');
+    }
+}
+
+addMarkersToStatic = (firstTime, restaurants = self.restaurants) => {
+    if (restaurants) {
+        let mobMarkers = '';
+        restaurants.forEach(restaurant => {
+            mobMarkers += `${restaurant.latlng.lat},${restaurant.latlng.lng}|`;
+        });
+
+        if (firstTime === false) {
+            console.log("first time is false")
+            var mobMap = document.querySelector('.static_map');
+            mobMap.style.display = 'block';
+            mobMap.src = `https://maps.googleapis.com/maps/api/staticmap?center=40.722216,-73.987501&markers=size:large|color:red|${mobMarkers}&zoom=12&size=458x300&maptype=roadmap&key=AIzaSyAYs8hR5MJ-84q_MQTJYVgGYXBF8I5yrMw`;
+        }
+        return mobMarkers;
+
+
+    }
+
+}
 /**
  * Add markers for current restaurants to the map.
  */
@@ -213,16 +293,13 @@ addMarkersToMap = (restaurants = self.restaurants) => {
     });
 }
 
-
-/*module.exports = {
-    fetchNeighborhoods: fetchNeighborhoods,
-    fillNeighborhoodsHTML: fillNeighborhoodsHTML,
-    fetchCuisines: fetchCuisines,
-    fillCuisinesHTML: fillCuisinesHTML,
-    updateRestaurants: updateRestaurants,
-    resetRestaurants: resetRestaurants,
-    fillRestaurantsHTML: fillRestaurantsHTML,
-    createRestaurantHTML: createRestaurantHTML,
-    addMarkersToMap: addMarkersToMap,
-
-};*/
+renderHtml = (name, value, parent = null) => {
+    var element = document.createElement(name);
+    if (value) {
+        element.innerHTML = value;
+    }
+    if (parent) {
+        parent.append(element);
+    }
+    return element;
+}

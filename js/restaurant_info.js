@@ -1,11 +1,60 @@
-//import DBHelper from './dbhelper.js';
 let restaurant;
 var map;
 
+
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    fetchRestaurantFromURL();
+    createReviewHTML();
+
+});
 /**
  * Initialize Google map, called from HTML.
  */
 window.initMap = () => {
+
+    if (window.innerWidth < 464) {
+        console.log('Its mobile!!!!!');
+        var deskMap = document.getElementById('map');
+        deskMap.style.display = 'none';
+        self.isDesktopMap = false;
+        self.initMobileMap();
+
+    } else {
+        console.log('Its desktop!!!!!');
+        var mobMap = document.querySelector('.static_map');
+        mobMap.style.display = 'none';
+        self.isMobileMap = false;
+        self.initDesktopMap();
+    }
+
+
+}
+
+
+window.initMobileMap = () => {
+    fetchRestaurantFromURL((error, restaurant) => {
+        var mobMap = document.querySelector('.static_map_Res');
+        mobMap.setAttribute('src', `https://maps.googleapis.com/maps/api/staticmap?center=${restaurant.latlng.lat},${restaurant.latlng.lng}&markers=size:large|color:red|${restaurant.latlng.lat},${restaurant.latlng.lng}&zoom=12&size=400x400&maptype=roadmap&key=AIzaSyAYs8hR5MJ-84q_MQTJYVgGYXBF8I5yrMw`);
+
+        mobMap.addEventListener('click', function (e) {
+            e.preventDefault();
+            mobMap.style.display = 'none';
+            self.initDesktopMap();
+
+        });
+
+    });
+
+
+}
+
+window.initDesktopMap = () => {
+    var deskMap = document.getElementById('map');
+    deskMap.style.display = 'block';
+
+
+
     fetchRestaurantFromURL((error, restaurant) => {
         if (error) { // Got an error!
             console.error(error);
@@ -15,10 +64,14 @@ window.initMap = () => {
                 center: restaurant.latlng,
                 scrollwheel: false
             });
+            google.maps.event.addListenerOnce(map, 'idle', () => {
+                document.getElementsByTagName('iframe')[0].title = "Google Maps";
+            })
             fillBreadcrumb();
             DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
         }
     });
+
 }
 
 /**
@@ -40,8 +93,11 @@ fetchRestaurantFromURL = (callback) => {
                 console.error(error);
                 return;
             }
-            fillRestaurantHTML();
-            callback(null, restaurant)
+            DBHelper.fetchRestaurantsReviews(self.restaurant, (error, reviews) => {
+                self.restaurant.reviews = reviews;
+                fillRestaurantHTML();
+                callback(null, restaurant)
+            });
         });
     }
 }
@@ -52,50 +108,16 @@ fetchRestaurantFromURL = (callback) => {
 fillRestaurantHTML = (restaurant = self.restaurant) => {
     const name = document.getElementById('restaurant-name');
     name.innerHTML = restaurant.name;
-    name.tabIndex = '0';
 
     const address = document.getElementById('restaurant-address');
     address.innerHTML = restaurant.address;
-    address.tabIndex = '0';
 
     const image = document.getElementById('restaurant-img');
-    image.className = 'restaurant-img'
+    image.className = 'restaurant-img';
+    image.alt = "An image of " + restaurant.name;
     image.src = DBHelper.imageUrlForRestaurant(restaurant);
-    if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/1.jpg") {
-        image.alt = "Mission Chinese Food Restaurant, classical indoor decoration"
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/2.jpg") {
-        image.alt = "Emily Restaurant, Italian pizza"
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/3.jpg") {
-        image.alt = "Kang Ho Dong Baekjeong Restaurant, street food style decoration"
-
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/4.jpg") {
-        image.alt = "Katz's Delicatessen Restaurant, American fast food"
-
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/5.jpg") {
-        image.alt = "Roberta's Pizza Restaurant, classical Pizza decoration"
-
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/6.jpg") {
-        image.alt = "Hometown BBQ Restaurant, casual decoration"
-
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/7.jpg") {
-        image.alt = "Superiority Burger Restaurant, fast food style decoration"
-
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/8.jpg") {
-        image.alt = "The Dutch Restaurant, classical indoor decoration"
-
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/9.jpg") {
-        image.alt = "Mu Ramen Restaurant, well-designed decoration"
-
-    } else if (DBHelper.imageUrlForRestaurant(restaurant) == "/img/10.jpg") {
-        image.alt = "Casa Enrique Restaurant, modern indoor decoration"
-
-    }
-
-    image.tabIndex = '0';
-
     const cuisine = document.getElementById('restaurant-cuisine');
     cuisine.innerHTML = restaurant.cuisine_type;
-    cuisine.tabIndex = '0';
 
     // fill operating hours
     if (restaurant.operating_hours) {
@@ -104,6 +126,8 @@ fillRestaurantHTML = (restaurant = self.restaurant) => {
     // fill reviews
     fillReviewsHTML();
 }
+
+
 
 /**
  * Create restaurant operating hours HTML table and add it to the webpage.
@@ -114,12 +138,10 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
     for (let key in operatingHours) {
         const row = document.createElement('tr');
 
-        const day = document.createElement('td');
-        day.innerHTML = key;
+        const day = renderHtml('td', key);
         row.appendChild(day);
 
-        const time = document.createElement('td');
-        time.innerHTML = operatingHours[key];
+        const time = renderHtml('td', operatingHours[key]);
         row.appendChild(time);
 
         hours.appendChild(row);
@@ -130,19 +152,19 @@ fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => 
  * Create all reviews HTML and add them to the webpage.
  */
 fillReviewsHTML = (reviews = self.restaurant.reviews) => {
+
+
     const container = document.getElementById('reviews-container');
-    const title = document.createElement('h3');
-    title.innerHTML = 'Reviews';
-    title.tabIndex = '0';
+    const title = renderHtml('h3', 'Reviews');
     container.appendChild(title);
+    const ul = document.getElementById('reviews-list');
 
     if (!reviews) {
-        const noReviews = document.createElement('p');
-        noReviews.innerHTML = 'No reviews yet!';
+        const noReviews = renderHtml('p', 'No reviews yet!');
         container.appendChild(noReviews);
         return;
     }
-    const ul = document.getElementById('reviews-list');
+    //     REMEMBER HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     reviews.forEach(review => {
         ul.appendChild(createReviewHTML(review));
     });
@@ -154,37 +176,62 @@ fillReviewsHTML = (reviews = self.restaurant.reviews) => {
  */
 createReviewHTML = (review) => {
     const li = document.createElement('li');
-    const name = document.createElement('p');
-    name.innerHTML = review.name;
-    name.tabIndex = '0'
+    const name = renderHtml('p', review.name);
     li.appendChild(name);
 
-    const date = document.createElement('p');
-    date.innerHTML = review.date;
-    date.tabIndex = '0';
+    const date = renderHtml('p', review.updatedAt);
     li.appendChild(date);
 
-    const rating = document.createElement('p');
-    rating.innerHTML = `Rating: ${review.rating}`;
-    rating.tabIndex = '0';
+    const rating = renderHtml('p', `Rating: ${review.rating}`);
     li.appendChild(rating);
 
-    const comments = document.createElement('p');
-    comments.innerHTML = review.comments;
-    comments.tabIndex = '0';
+    const comments = renderHtml('p', review.comments);
     li.appendChild(comments);
 
     return li;
 }
 
+
+const reviewForm = document.getElementById("reviewForm");
+reviewForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+    let review = {
+        "restaurant_id": self.restaurant.id
+    };
+    const formdata = new FormData(reviewForm);
+    for (var [key, value] of formdata.entries()) {
+        review[key] = value;
+    }
+    DBHelper.submitReview(review);
+
+    const ul = document.getElementById('reviews-list');
+    ul.appendChild(createReviewHTML(review));
+    reviewForm.reset();
+
+});
+
+
+renderHtml = (name, value) => {
+    var element = document.createElement(name);
+    if (value) {
+        element.innerHTML = value;
+    }
+    return element;
+}
+
+
+
+
+
 /**
  * Add restaurant name to the breadcrumb navigation menu
  */
 fillBreadcrumb = (restaurant = self.restaurant) => {
-    const breadcrumb = document.getElementById('breadcrumb');
-    const li = document.createElement('li');
-    li.innerHTML = restaurant.name;
-    breadcrumb.appendChild(li);
+    if (restaurant) {
+        const breadcrumb = document.getElementById('breadcrumb');
+        const li = renderHtml('li', restaurant.name);
+        breadcrumb.appendChild(li);
+    }
 }
 
 /**

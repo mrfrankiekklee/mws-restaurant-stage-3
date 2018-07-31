@@ -45,6 +45,13 @@ var get = function (url) {
     });
 };
 
+window.addEventListener('online', function (event) {
+    alert("Online!");
+});
+window.addEventListener('offline', function (event) {
+    alert("connection lost");
+
+});
 
 /*get('https://maps.googleapis.com/maps/api/js?key=AIzaSyDzLHy2m5sSKhSx_-yot8xk8jXTP-T8q18&libraries=places&callback=initMap', {
         mode: 'no-cors'
